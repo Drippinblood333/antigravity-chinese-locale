@@ -56,7 +56,7 @@
     }
 
     // 2. Isolation & Exemption Checks
-    var EXCLUDED_TAGS = {
+    var EXCLUDED_TEXT_TAGS = {
         "SCRIPT": true,
         "STYLE": true,
         "PRE": true,
@@ -69,7 +69,7 @@
         while (curr && curr !== document.body && curr !== document.documentElement) {
             if (curr.nodeType === 1) {
                 var tag = curr.tagName;
-                if (EXCLUDED_TAGS[tag]) return true;
+                if (EXCLUDED_TEXT_TAGS[tag]) return true;
                 if (curr.isContentEditable) return true;
                 var cls = curr.className;
                 if (typeof cls === "string" && (
@@ -95,6 +95,14 @@
         return false;
     }
 
+    function translateInnerDuration(str) {
+        if (!str || typeof str !== "string") return str;
+        return str.replace(/(\d+)\s*days?/gi, "$1 天")
+                  .replace(/(\d+)\s*hours?/gi, "$1 小时")
+                  .replace(/(\d+)\s*minutes?/gi, "$1 分钟")
+                  .replace(/(\d+)\s*seconds?/gi, "$1 秒");
+    }
+
     function getTranslatedText(original) {
         var trimmed = original.trim();
         if (!trimmed) return null;
@@ -115,6 +123,7 @@
         for (var i = 0; i < regexList.length; i++) {
             if (regexList[i].re.test(trimmed)) {
                 var replaced = trimmed.replace(regexList[i].re, regexList[i].rep);
+                replaced = translateInnerDuration(replaced);
                 var lead = original.match(/^\s*/)[0];
                 var trail = original.match(/\s*$/)[0];
                 return lead + replaced + trail;
@@ -140,7 +149,7 @@
 
     function translateElementAttributes(el) {
         if (!el || el.nodeType !== 1) return;
-        if (EXCLUDED_TAGS[el.tagName]) return;
+        if (el.tagName === "SCRIPT" || el.tagName === "STYLE") return;
 
         // placeholder
         if (el.hasAttribute("placeholder")) {
@@ -203,6 +212,20 @@
     window.addEventListener("popstate", function() { setTimeout(translateWholePage, 50); });
     window.addEventListener("hashchange", function() { setTimeout(translateWholePage, 50); });
 
+    // User interaction triggers for modals, dropdowns, popovers, tabs
+    document.addEventListener("click", function() {
+        setTimeout(translateWholePage, 50);
+        setTimeout(translateWholePage, 200);
+        setTimeout(translateWholePage, 500);
+    }, true);
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" || e.key === "Enter" || (e.ctrlKey && e.key === ",")) {
+            setTimeout(translateWholePage, 50);
+            setTimeout(translateWholePage, 200);
+            setTimeout(translateWholePage, 500);
+        }
+    }, true);
+
     // Multi-turn progressive scans for React initial async rendering
     var scanDelays = [100, 250, 500, 1000, 1800, 3000, 5000];
     for (var k = 0; k < scanDelays.length; k++) {
@@ -240,6 +263,9 @@
         }
     }
     startObserving();
+
+    // 6. Periodic Self-Healing Timer (heals dynamic timer updates without microtask recursion)
+    setInterval(translateWholePage, 3000);
 
     console.log("[Antigravity i18n] Localization runner successfully initialized and active.");
 })();
