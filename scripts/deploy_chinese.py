@@ -8,6 +8,9 @@ import re
 import urllib.request
 import argparse
 
+MIN_NODE_VERSION = (22, 12, 0)
+ASAR_PACKAGE = "@electron/asar@4.3.2"
+
 def find_antigravity_resources():
     local_app_data = os.environ.get("LOCALAPPDATA", "")
     if local_app_data:
@@ -55,6 +58,28 @@ def restore_backup(resources_dir):
     print("    Please restart Antigravity to load the original version.")
     sys.exit(0)
 
+def check_node_runtime():
+    minimum = ".".join(map(str, MIN_NODE_VERSION))
+    try:
+        node = subprocess.run(["node", "--version"], capture_output=True, text=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        print(f"[Error] Node.js {minimum} or later is required. Make sure node is available in PATH.")
+        sys.exit(1)
+
+    detected = node.stdout.strip()
+    version = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", detected)
+    if version is None or tuple(map(int, version.groups())) < MIN_NODE_VERSION:
+        print(f"[Error] Found Node.js {detected!r}. Install Node.js {minimum} or later.")
+        sys.exit(1)
+
+    try:
+        subprocess.run("npx --version", shell=True, capture_output=True, text=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        print("[Error] npx could not run. Make sure npm and npx are available in PATH.")
+        sys.exit(1)
+
+    print(f"[*] Node.js {detected} and npx are available.")
+
 def main():
     parser = argparse.ArgumentParser(description="Antigravity Chinese Localization Deployer & Restorer")
     parser.add_argument("-r", "--restore", "--uninstall", action="store_true", help="Restore pristine app.asar from backup")
@@ -76,16 +101,8 @@ def main():
     if args.restore:
         restore_backup(resources_dir)
 
-    # 2. Check Node.js
-    try:
-        res = subprocess.run(["node", "-v"], capture_output=True, text=True)
-        if res.returncode != 0:
-            print("[Error] Node.js is required.")
-            sys.exit(1)
-        print(f"[✓] Node.js detected: {res.stdout.strip()}")
-    except Exception as e:
-        print(f"[Error] Node.js check failed: {e}")
-        sys.exit(1)
+    # 2. Check Node.js and npx before creating a backup
+    check_node_runtime()
 
     target_asar = os.path.join(resources_dir, "app.asar")
     backup_asar = os.path.join(resources_dir, "app.asar.bak")
@@ -118,7 +135,7 @@ def main():
 
     try:
         print("[*] Extracting app.asar into sandbox...")
-        subprocess.run(f'npx --yes @electron/asar extract "{target_asar}" "{work_dir}"', shell=True, check=True)
+        subprocess.run(f'npx --yes {ASAR_PACKAGE} extract "{target_asar}" "{work_dir}"', shell=True, check=True)
 
         dist_dir = os.path.join(work_dir, "dist")
         if not os.path.exists(dist_dir):
@@ -312,13 +329,13 @@ exports.injectAntigravityI18n = injectAntigravityI18n;
 
         print("[*] Packaging into sandbox asar...")
         subprocess.run(
-            f'npx --yes @electron/asar pack "{work_dir}" "{temp_pack}" --unpack-dir "node_modules/chrome-devtools-mcp"',
+            f'npx --yes {ASAR_PACKAGE} pack "{work_dir}" "{temp_pack}" --unpack-dir "node_modules/chrome-devtools-mcp"',
             shell=True,
             check=True
         )
 
         print("[*] Running Gatekeeper 2: Re-extracting sandbox asar to verify integrity...")
-        subprocess.run(f'npx --yes @electron/asar extract "{temp_pack}" "{sandbox_verify_dir}"', shell=True, check=True)
+        subprocess.run(f'npx --yes {ASAR_PACKAGE} extract "{temp_pack}" "{sandbox_verify_dir}"', shell=True, check=True)
         for sub_f in ["dist/utils.js", "dist/main.js", "dist/menu.js", "dist/i18n_runner.js"]:
             verify_target = os.path.join(sandbox_verify_dir, sub_f)
             chk = subprocess.run(["node", "--check", verify_target], capture_output=True, text=True)

@@ -42,7 +42,7 @@ Available both as an **Autonomous Agent Skill** (`Chinesizing`) for Antigravity,
 ## Requirements
 
 - **Google Antigravity Client** (Windows, macOS, or Linux)
-- **Node.js**: v18.0.0 or later (with `npx` available in PATH)
+- **Node.js**: v22.12.0 or later (with `npx` available in PATH)
 - **Python**: 3.8 or later (Standard library only, no external pip dependencies needed)
 
 ## Quick Start
@@ -122,7 +122,7 @@ This project is an independent open-source localization enhancement tool and is 
 ## 环境要求
 
 - **Google Antigravity 客户端**（支持 Windows / macOS / Linux）
-- **Node.js**：v18.0 或以上（用于打包与语法校验，命令行能调用 `npx` 即可）
+- **Node.js**：v22.12.0 或以上（用于打包与语法校验，终端需能运行 `npx`）
 - **Python**：3.8 或以上（仅调用标准库，不需要 `pip` 安装任何第三方依赖）
 
 ## 快速上手
