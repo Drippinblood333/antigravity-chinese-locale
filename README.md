@@ -80,7 +80,7 @@ python scripts/deploy_chinese.py --restore
 
 ## License
 
-[MIT](LICENSE) © 2026 Drippinblood333
+This project builds on [renkeshui/antigravity-chinese-locale](https://github.com/renkeshui/antigravity-chinese-locale). Drippinblood333 maintains the v3.0 updates in this repository. See the [MIT license](LICENSE) for the copyright notices and license terms.
 
 ## Disclaimer
 
@@ -172,7 +172,7 @@ python scripts/deploy_chinese.py --restore
 
 ## 开源许可
 
-本项目基于 [MIT 许可证](LICENSE) 开源 © 2026 Drippinblood333
+本项目基于 [renkeshui 的 antigravity-chinese-locale](https://github.com/renkeshui/antigravity-chinese-locale) 开发，由 Drippinblood333 维护本仓库的 v3.0 更新。版权声明和许可条款见 [MIT 许可证](LICENSE)。
 
 ## 免责声明
 
